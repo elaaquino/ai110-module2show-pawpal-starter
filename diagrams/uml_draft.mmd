@@ -1,0 +1,55 @@
+classDiagram
+    class Owner {
+        +String ownerId
+        +String name
+        +String email
+        +String phone
+        +List~Pet~ pets
+        +addPet(pet) void
+        +removePet(petId) void
+        +updateInfo(name, email, phone) void
+    }
+
+    class Pet {
+        +String petId
+        +String name
+        +String species
+        +String breed
+        +int ageYears
+        +float weightKg
+        +String notes
+        +List~Task~ tasks
+        +addTask(task) void
+        +editTask(taskId, changes) void
+        +removeTask(taskId) void
+    }
+
+    class Task {
+        +String taskId
+        +String type
+        +String description
+        +int durationMin
+        +int priority
+        +String preferredWindow
+        +bool isFixedTime
+        +String recurrence
+        +bool isComplete
+        +markComplete() void
+        +edit(changes) void
+    }
+
+    class Scheduler {
+        +Date date
+        +List~Task~ tasks
+        +Map constraints
+        +List~Task~ plan
+        +String rationale
+        +generateSchedule(tasks, constraints) List~Task~
+        +explainPlan() String
+        +setConstraint(key, value) void
+    }
+
+    Owner "1" --> "0..*" Pet : owns
+    Pet "1" --> "0..*" Task : has
+    Scheduler ..> Task : schedules
+    Scheduler ..> Pet : reads availability
