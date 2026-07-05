@@ -4,13 +4,28 @@
 
 **a. Initial design**
 
+Three core actions for user to perform: 
+1. Enter basic owner + pet info
+2. Add/edit tasks (duration + priority at minimum)
+3. View today's tasks
+
 - Briefly describe your initial UML design.
+
+My initial UML design just contians the four classes I chose and the basic information/methods that need to be held within those classes.
+
 - What classes did you include, and what responsibilities did you assign to each?
+
+I included four classes, Owner, Pet, Task, and Scheduler. Owner and Pet contian the basic information needed to track an owner and a pet. The Task class tracks task type, constraints, priority, and duration. The Scheduler class tracks dates, raionale, generates a schedule, and explains why the plan was chosen.
 
 **b. Design changes**
 
 - Did your design change during implementation?
+
+Yes.
+
 - If yes, describe at least one change and why you made it.
+
+Task didn't have a link back to its pet, so I added petID: str to Task. 
 
 ---
 
@@ -24,7 +39,12 @@
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+
+The scheduler never assigns times to flexible tasks. It orders them but leaves them "flexible." Two tasks could both happen at 14:00 with no complaints, should one of those tasks be a flexible task.
+
 - Why is that tradeoff reasonable for this scenario?
+
+This tradeoff is reasonable because it lets the user complete their flexible tasks at a time it is best for them to do so, without being interrupted by other limitations in the scheduler.
 
 ---
 

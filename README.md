@@ -46,6 +46,19 @@ pip install -r requirements.txt
 
 Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
 
+================================================
+  Today's Schedule - 2026-06-23
+  Owner: Ada Lovelace
+================================================
+     08:00  Rex    Joint medication (5 min, HIGH)
+     09:00  Rex    Morning walk (45 min, HIGH)
+     12:00  Mia    Lunch feeding (10 min, MEDIUM)
+     15:00  Mia    Feather toy play (15 min, LOW)
+------------------------------------------------
+  Why this plan:
+  Plan for 2026-06-23: 4 task(s), 75 min scheduled. ...
+================================================
+
 ```
 # e.g.:
 # Daily plan for Biscuit (Golden Retriever):
@@ -73,6 +86,22 @@ Sample test output:
 ## 📐 Smarter Scheduling
 
 > Fill in once you've implemented scheduling logic.
+
+1. Daily plan generation (priority-weighted, packed greedily within a time budget) → Scheduler.generateSchedule
+
+2. Plan explanation / "why this plan" (human-readable rationale) → Scheduler.explainPlan, with the text assembled by Scheduler._buildRationale
+
+3. Chronological sorting of tasks (untimed tasks fall to the end) → sort_by_time (module-level helper)
+
+4. Task filtering by completion status and/or pet name → Owner.findTasks
+
+5. Recurring-task auto-respawn (completing a daily/weekly task spawns the next occurrence) → Pet.completeTask
+
+6. supporting pieces: Task.nextOccurrence (clones a fresh incomplete copy), Task.isRecurring (gate), Pet._nextTaskId (unique id like t4#2), Owner.completeTask (UI-facing delegator)
+Time-conflict detection (overlap-based, non-fatal warnings) → Scheduler.detectConflicts
+
+7. supporting pieces: Scheduler._window (task → [start, end) in minutes), Scheduler._fmt (minutes → HH:MM)
+Task field validation on construction (duration > 0, fixed-time needs a start) → Task.__post_init__
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
