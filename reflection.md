@@ -80,12 +80,12 @@ This tradeoff is reasonable because it lets the user complete their flexible tas
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+- I found that having the AI thoroughly explain any extra features/steps was helpful in implementing changes. Oftentimes, AI will try to improve things on its own without being told, and that can slip through the cracks. Having it specifically explain everything before fully adding changes helped a lot.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+- Sometimes, I would ask the chatbot to list something to me, like the classes/features, but it would write it in the file I had open instead of just listing it in the chat. It caused a few problems for me, so in the future I'm gonna specify to list those types of things in the chat, or just close the file in the chat as a whole.
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+- Using separpate chat sessions actually plays a big role in staying organized! It made it easy for me to refer to my original plans, testing, and general prompting based on suggestions or changes I needed to make. I'd honestly probably separate the chats even more based on file for future, larger projects.

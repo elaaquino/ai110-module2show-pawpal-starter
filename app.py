@@ -146,44 +146,75 @@ else:
             find_pet(pet_choice).addTask(task)
             st.success(f"Added '{task_title}' for {find_pet(pet_choice).name}.")
 
-# Show all current tasks across pets.
-all_tasks = owner.allTasks(date.today())
-if all_tasks:
-    st.write("Current tasks:")
-    st.table([
-        {
-            "pet": owner.petName(t.petId),
-            "task": t.description,
-            "type": t.type.value,
-            "duration_minutes": t.durationMin,
-            "priority": t.priority.name,
-            "recurrence": t.recurrence.value,
-            "time": t.preferredStart.strftime("%H:%M") if t.preferredStart else "flexible",
-        }
-        for t in all_tasks
-    ])
+st.divider()
 
-    # Mark a task complete. Recurring tasks automatically spawn the next
-    # occurrence via Owner.completeTask -> Pet.completeTask.
-    done_choice = st.selectbox(
-        "Mark a task complete",
-        options=[t.taskId for t in all_tasks],
-        format_func=lambda tid: next(
-            f"{owner.petName(t.petId)}: {t.description}"
-            for t in all_tasks if t.taskId == tid
-        ),
-    )
-    if st.button("Mark complete"):
-        task = next(t for t in all_tasks if t.taskId == done_choice)
-        spawned = owner.completeTask(task.petId, task.taskId)
-        if spawned is not None:
-            st.success(
-                f"Completed '{task.description}'. Spawned next occurrence "
-                f"'{spawned.taskId}' ({spawned.recurrence.value})."
-            )
-        else:
-            st.success(f"Completed '{task.description}' (one-off, no repeat).")
-        st.rerun()
+# --- Tasks overview: sorted + filtered through the backend ------------------
+st.subheader("Tasks")
+if not any(pet.tasks for pet in owner.pets):
+    st.info("No tasks yet. Add one above.")
+else:
+    fcol1, fcol2 = st.columns(2)
+    with fcol1:
+        pet_filter = st.selectbox("Filter by pet", ["All pets"] + [p.name for p in owner.pets])
+    with fcol2:
+        status_filter = st.selectbox("Filter by status", ["All", "Pending", "Completed"])
+
+    completed_by_label = {"All": None, "Pending": False, "Completed": True}
+    pet_name = None if pet_filter == "All pets" else pet_filter
+
+    # Owner.findTasks applies the filters AND returns the result already sorted
+    # chronologically (it calls sort_by_time internally).
+    tasks = owner.findTasks(completed=completed_by_label[status_filter], petName=pet_name)
+
+    if tasks:
+        st.table([
+            {
+                "time": t.preferredStart.strftime("%H:%M") if t.preferredStart else "flexible",
+                "pet": owner.petName(t.petId),
+                "task": t.description,
+                "type": t.type.value,
+                "duration_minutes": t.durationMin,
+                "priority": t.priority.name,
+                "recurrence": t.recurrence.value,
+                "status": "done" if t.isComplete else "pending",
+            }
+            for t in tasks
+        ])
+    else:
+        st.info("No tasks match these filters.")
+
+    # Live conflict scan across pending tasks via Scheduler.detectConflicts.
+    conflict_scan = Scheduler(date.today(), owner.findTasks(completed=False))
+    live_conflicts = conflict_scan.detectConflicts()
+    if live_conflicts:
+        for warning in live_conflicts:
+            st.warning(warning)
+    else:
+        st.success("No time conflicts among current tasks.")
+
+    # Mark a pending task complete. Recurring tasks automatically spawn the
+    # next occurrence via Owner.completeTask -> Pet.completeTask.
+    pending = owner.findTasks(completed=False)
+    if pending:
+        done_choice = st.selectbox(
+            "Mark a task complete",
+            options=[t.taskId for t in pending],
+            format_func=lambda tid: next(
+                f"{owner.petName(t.petId)}: {t.description}"
+                for t in pending if t.taskId == tid
+            ),
+        )
+        if st.button("Mark complete"):
+            task = next(t for t in pending if t.taskId == done_choice)
+            spawned = owner.completeTask(task.petId, task.taskId)
+            if spawned is not None:
+                st.success(
+                    f"Completed '{task.description}'. Next occurrence "
+                    f"'{spawned.taskId}' ({spawned.recurrence.value}) added."
+                )
+            else:
+                st.success(f"Completed '{task.description}' (one-off, no repeat).")
+            st.rerun()
 
 st.divider()
 
@@ -200,6 +231,9 @@ if st.button("Generate schedule"):
     if not plan:
         st.info("No tasks to schedule yet.")
     else:
+        total_minutes = sum(t.durationMin for t in plan)
+        st.success(f"Planned {len(plan)} task(s) totaling {total_minutes} min.")
+
         st.write("### Today's Schedule")
         st.table([
             {
@@ -211,10 +245,13 @@ if st.button("Generate schedule"):
             }
             for t in plan
         ])
+
+        st.write("### Conflicts")
         if scheduler.conflicts:
-            st.write("### Conflicts")
             for warning in scheduler.conflicts:
                 st.warning(warning)
+        else:
+            st.success("No scheduling conflicts detected.")
 
         st.write("### Why this plan")
         st.info(scheduler.explainPlan())

@@ -1,0 +1,93 @@
+classDiagram
+    class TaskType {
+        <<enumeration>>
+        WALK
+        FEEDING
+        MEDS
+        ENRICHMENT
+        GROOMING
+        OTHER
+    }
+    class Priority {
+        <<enumeration>>
+        LOW
+        MEDIUM
+        HIGH
+    }
+    class Recurrence {
+        <<enumeration>>
+        NONE
+        DAILY
+        WEEKLY
+    }
+
+    class Owner {
+        +String ownerId
+        +String name
+        +String email
+        +String phone
+        +List~Pet~ pets
+        +addPet(pet) void
+        +removePet(petId) void
+        +updateInfo(name, email, phone) void
+        +allTasks(on) List~Task~
+        +petName(petId) String
+        +completeTask(petId, taskId) Task
+        +findTasks(completed, petName) List~Task~
+    }
+
+    class Pet {
+        +String petId
+        +String name
+        +String species
+        +String breed
+        +int ageYears
+        +float weightKg
+        +String notes
+        +List~Task~ tasks
+        +addTask(task) void
+        +editTask(taskId, changes) void
+        +removeTask(taskId) void
+        +completeTask(taskId) Task
+        +dueTasks(on) List~Task~
+    }
+
+    class Task {
+        +String taskId
+        +String petId
+        +TaskType type
+        +String description
+        +int durationMin
+        +Priority priority
+        +Time preferredStart
+        +Time preferredEnd
+        +bool isFixedTime
+        +Recurrence recurrence
+        +bool isComplete
+        +markComplete() void
+        +isRecurring() bool
+        +nextOccurrence(newTaskId) Task
+        +edit(changes) void
+    }
+
+    class Scheduler {
+        +Date day
+        +List~Task~ tasks
+        +Map constraints
+        +List~Task~ plan
+        +String rationale
+        +List~String~ conflicts
+        +generateSchedule() List~Task~
+        +explainPlan() String
+        +detectConflicts(tasks) List~String~
+        +setConstraint(key, value) void
+    }
+
+    Owner "1" --> "0..*" Pet : owns
+    Pet "1" --> "0..*" Task : has
+    Scheduler ..> Task : schedules & checks conflicts
+    Task ..> TaskType : uses
+    Task ..> Priority : uses
+    Task ..> Recurrence : uses
+
+    note for Scheduler "Built by the caller (app.py / main.py) from Owner.allTasks();\nno direct Owner/Pet dependency. Module fn sort_by_time() orders tasks."
